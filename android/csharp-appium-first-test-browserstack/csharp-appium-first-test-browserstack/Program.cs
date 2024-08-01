@@ -1,9 +1,11 @@
 ﻿using System;
 using OpenQA.Selenium.Appium;
 using OpenQA.Selenium.Appium.Android;
-using OpenQA.Selenium.Remote;
-using OpenQA.Selenium.Support.UI;
 using System.Collections.Generic;
+using System.Threading;
+using OpenQA.Selenium.Interactions;
+using System.Drawing;
+
 
 namespace csharp_appium_first_test_browserstack
 {
@@ -11,54 +13,48 @@ namespace csharp_appium_first_test_browserstack
     {
         static void Main(string[] args)
         {
+            Dictionary<string, object> browserstackOptions = new Dictionary<string, object>();
+            browserstackOptions.Add("userName", "");
+            browserstackOptions.Add("accessKey", "");
+            browserstackOptions.Add("appiumVersion", "2.6.0");
+            browserstackOptions.Add("buildName", "SwipeUp_8.0");
+
             AppiumOptions caps = new AppiumOptions();
 
-            // Set your BrowserStack access credentials
-            caps.AddAdditionalCapability("browserstack.user", "YOUR_USERNAME");
-            caps.AddAdditionalCapability("browserstack.key", "YOUR_ACCESS_KEY");
+            caps.AddAdditionalAppiumOption("bstack:options", browserstackOptions);
 
-            // Set URL of the application under test
-            caps.AddAdditionalCapability("app", "bs://<app-id>");
+            //caps.PlatformName = "android";
+            //caps.PlatformVersion = "13.0";
+            //caps.DeviceName = "Samsung Galaxy S23";
 
-            // Specify device and os_version
-            caps.AddAdditionalCapability("device", "Google Pixel 3");
-            caps.AddAdditionalCapability("os_version", "9.0");
+            //caps.PlatformName = "android";
+            //caps.PlatformVersion = "9.0";
+            //caps.DeviceName = "Google Pixel 3";
 
-            // Specify the platform name
-            caps.PlatformName = "Android";
+            caps.PlatformName = "android";
+            caps.PlatformVersion = "13.0";
+            caps.DeviceName = "Samsung Galaxy S23";
 
-            // Set other BrowserStack capabilities
-            caps.AddAdditionalCapability("project", "First CSharp project");
-            caps.AddAdditionalCapability("build", "CSharp Android");
-            caps.AddAdditionalCapability("name", "first_test");
+            caps.App = "bs://sample.app";
 
 
-            // Initialize the remote Webdriver using BrowserStack remote URL
+            // Initialize the remote WebDriver using BrowserStack remote URL
             // and desired capabilities defined above
-            AndroidDriver<AndroidElement> driver = new AndroidDriver<AndroidElement>(
-                    new Uri("http://hub-cloud.browserstack.com/wd/hub"), caps);
+            AppiumDriver driver = new AndroidDriver(
+                   new Uri("http://hub-cloud.browserstack.com/wd/hub"), caps);
 
-            // Test case for the BrowserStack sample Android app. 
-            // If you have uploaded your app, update the test case here.
-            AndroidElement searchElement = (AndroidElement)new WebDriverWait(
-                driver, TimeSpan.FromSeconds(30)).Until(
-                SeleniumExtras.WaitHelpers.ExpectedConditions.ElementToBeClickable(
-                    MobileBy.AccessibilityId("Search Wikipedia"))
-            );
-            searchElement.Click();
-            AndroidElement insertTextElement = (AndroidElement)new WebDriverWait(
-                driver, TimeSpan.FromSeconds(30)).Until(
-                SeleniumExtras.WaitHelpers.ExpectedConditions.ElementToBeClickable(
-                    MobileBy.Id("org.wikipedia.alpha:id/search_src_text"))
-            );
-            insertTextElement.SendKeys("BrowserStack");
-            System.Threading.Thread.Sleep(5000);
+            Thread.Sleep(2000);
 
-            IReadOnlyList<AndroidElement> allTextViewElements =
-                driver.FindElementsByClassName("android.widget.TextView");
-            Console.WriteLine(allTextViewElements.Count > 0);
+            var finger = new PointerInputDevice(PointerKind.Touch);
+            var start = new Point(550, 1612);
+            var end = new Point(543, 1600);
+            var swipe = new ActionSequence(finger);
+            swipe.AddAction(finger.CreatePointerMove(CoordinateOrigin.Viewport, start.X, start.Y, TimeSpan.Zero));
+            swipe.AddAction(finger.CreatePointerDown(MouseButton.Left));
+            swipe.AddAction(finger.CreatePointerMove(CoordinateOrigin.Viewport, end.X, end.Y, TimeSpan.FromMilliseconds(1000)));
+            swipe.AddAction(finger.CreatePointerUp(MouseButton.Left));
+            driver.PerformActions(new List<ActionSequence> { swipe });
 
-            // Invoke driver.quit() after the test is done to indicate that the test is completed.
             driver.Quit();
         }
     }
